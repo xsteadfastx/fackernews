@@ -1,0 +1,17 @@
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}fackernews{% endblock %}
+
+{% include "navbar.html" %}
+
+{% block content %}
+<div class="container">
+	<h1>Submit</h1>
+	<form class="form" role="form" action="" method="POST" enctype="login">
+		{{ form.hidden_tag() }}
+		{{ wtf.form_field(form.url) }}
+		{{ wtf.form_field(form.titel) }}
+		<p><button type="submit" class="btn btn-default" value="name">Submit</button></p>
+</div>
+{% endblock %}
