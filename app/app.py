@@ -1,6 +1,6 @@
 import datetime
 import os
-from flask import Flask, render_template, redirect, session, request
+from flask import Flask, render_template, redirect, session, request, flash
 from flask_wtf import Form
 from wtforms import TextField
 from wtforms.validators import Required, URL
@@ -73,6 +73,9 @@ def submit():
                     0)
         db.session.add(link)
         db.session.commit()
+
+        flash('Added link')
+
         return redirect('/')
 
     return render_template('submit.html', form=form)
