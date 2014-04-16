@@ -1,6 +1,9 @@
 # name of the site
 SITENAME = 'fackernews'
 
+# URI of the database
+DB_URI = 'sqlite:///test.db'
+
 # best made with 'os.urandom(24)'
 SECRETKEY = 'mysupperduppasecretkey'
 
