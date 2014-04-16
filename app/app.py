@@ -8,9 +8,13 @@ from wtforms import TextField
 from wtforms.validators import Required, URL
 
 
+exec(open('fackernews.conf').read())
+
+
 app = Flask(__name__)
 # app.secret_key = os.urandom(24)
-app.secret_key = 'f00b4r'
+app.secret_key = SECRETKEY
+app.config['SITENAME'] = SITENAME
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 db = SQLAlchemy(app)
 Bootstrap(app)
@@ -45,9 +49,9 @@ class LinkForm(Form):
 
 @app.route('/')
 def index():
-        ''' landing page '''
+        ''' frontpage '''
         twenty_four_hours_ago = datetime.datetime.utcnow(
-            ) - datetime.timedelta(hours=24)
+            ) - datetime.timedelta(hours=HOURS_TO_LIVE_FRONTPAGE)
         links = Link.query.filter(
             Link.date_time > twenty_four_hours_ago).order_by(
             desc(Link.upvotes)).limit(30)
@@ -62,7 +66,7 @@ def index():
 def new():
         ''' lists new links without ordering them '''
         twenty_four_hours_ago = datetime.datetime.utcnow(
-            ) - datetime.timedelta(hours=24)
+            ) - datetime.timedelta(hours=HOURS_TO_LIVE_NEW)
         links = Link.query.filter(
             Link.date_time > twenty_four_hours_ago).order_by(
             desc(Link.date_time)).limit(30)
