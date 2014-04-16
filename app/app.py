@@ -94,10 +94,14 @@ def index():
         Link.date_time > twenty_four_hours_ago).order_by(
         desc(Link.upvotes)).limit(30)
 
+    comment_count = []
+    for link in links:
+        comment_count.append(len(Comment.query.filter_by(link_id=link.id).all()))
+
     if 'voted' not in session:
             session['voted'] = []
 
-    return render_template('index.html', links=links)
+    return render_template('index.html', links=enumerate(links), comment_count=comment_count)
 
 
 @app.route('/new')

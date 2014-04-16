@@ -1,0 +1,42 @@
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}{{ config.SITENAME }}{% endblock %}
+
+{% include "navbar.html" %}
+
+{% block content %}
+<div class="container">
+	{% with messages = get_flashed_messages() %}
+		{% if messages %}
+			{% for message in messages %}
+			<div class="alert alert-success">{{ message }}</div>
+			{% endfor %}
+		{% endif %}
+	{% endwith %}
+	<h1>{{ titel }}</h1>
+	<form class="form" role="form" action="" method="POST" enctype="login">
+		{{ form.hidden_tag() }}
+		{{ wtf.form_field(form.name) }}
+		{{ wtf.form_field(form.email) }}
+		{{ wtf.form_field(form.website) }}
+		{{ wtf.form_field(form.message) }}
+		<p><button type="submit" class="btn btn-default" value="name">Submit</button></p>
+
+	<hr />
+	<table class="table table-striped table-hover">
+	{% for comment in comments %}
+		<tr>
+			<td>
+				{{ comment.message }}
+				{% if comment.website %}
+				<br /><small><a href="{{ comment.website }}">{{ comment.name }}</a> | {{ comment.date_time.strftime('%Y-%m-%d %H:%M') }}</small>
+				{% else %}
+				<br /><small>{{ comment.name }} | {{ comment.date_time.strftime('%Y-%m-%d %H:%M') }}</small>
+				{% endif %}
+			</td>
+		</tr>
+	{% endfor %}
+	</table>
+</div>
+{% endblock %}

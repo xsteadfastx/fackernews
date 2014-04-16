@@ -14,16 +14,16 @@
 		{% endif %}
 	{% endwith %}
 	<table class="table table-striped table-hover">
-	{% for i in links %}
+	{% for i, j in links %}
 		<tr>
-			{% if i.id|string() in session.voted %}
+			{% if j.id|string() in session.voted %}
 			<td>&#9650;</td>
 			{% else %}
-			<td><a href="/upvote/{{ i.id }}">&#9650;</a></td>
+			<td><a href="/upvote/{{ j.id }}">&#9650;</a></td>
 			{% endif %}
 			<td>
-				<a href="{{ i.url }}">{{ i.titel }}</a>
-				<br /><small>{{ i.upvotes }} upvotes | <a href="/comments/{{ i.id }}">comments</a></small>
+				<a href="{{ j.url }}">{{ j.titel }}</a>
+				<br /><small>{{ j.upvotes }} upvotes | <a href="/comments/{{ j.id }}">{% if comment_count[i] > 0 %}{{ comment_count[i] }} comments{% else %}discuss{% endif %}</a></small>
 			</td>
 		</tr>
 	{% endfor %}
