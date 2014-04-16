@@ -23,7 +23,7 @@
 			{% endif %}
 			<td>
 				<a href="{{ i.url }}">{{ i.titel }}</a>
-				<br /><small>{{ i.upvotes }} upvotes</small>
+				<br /><small>{{ i.upvotes }} upvotes | <a href="/comments/{{ i.id }}">comments</a></small>
 			</td>
 		</tr>
 	{% endfor %}
