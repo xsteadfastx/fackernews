@@ -30,9 +30,17 @@
 			<td>
 				{{ comment.message }}
 				{% if comment.website %}
-				<br /><small><a href="{{ comment.website }}">{{ comment.name }}</a> | {{ comment.date_time.strftime('%Y-%m-%d %H:%M') }}</small>
+					{% if comment.id|string() in session.voted_comments %}
+					<br /><small>&#9650; <a href="{{ comment.website }}">{{ comment.name }}</a> | {{ comment.date_time.strftime('%Y-%m-%d %H:%M') }}</small>
+					{% else %}
+					<br /><small><a href="/comments/{{ link_id }}/upvote/{{ comment.id }}">&#9650;</a> <a href="{{ comment.website }}">{{ comment.name }}</a> | {{ comment.date_time.strftime('%Y-%m-%d %H:%M') }}</small>
+					{% endif %}
 				{% else %}
-				<br /><small>{{ comment.name }} | {{ comment.date_time.strftime('%Y-%m-%d %H:%M') }}</small>
+					{% if comment.id|string() in session.voted_comments %}
+					<br /><small>&#9650; {{ comment.name }} | {{ comment.date_time.strftime('%Y-%m-%d %H:%M') }}</small>
+					{% else %}
+					<br /><small><a href="/comments/{{ link_od }}/upvote/{{ comment.id }}">&#9650;</a> {{ comment.name }} | {{ comment.date_time.strftime('%Y-%m-%d %H:%M') }}</small>
+					{% endif %}
 				{% endif %}
 			</td>
 		</tr>

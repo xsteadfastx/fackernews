@@ -150,10 +150,10 @@ def upvote(link_id):
     link.upvotes += 1
     db.session.commit()
 
-    if 'voted' in session:
-            session['voted'].append(str(link_id))
+    if 'voted_links' in session:
+        session['voted_links'].append(str(link_id))
     else:
-            session['voted'] = []
+        session['voted_links'] = []
 
     return redirect('/')
 
@@ -177,11 +177,24 @@ def comments(link_id):
         return redirect('/comments/' + str(link_id))
 
     titel = Link.query.filter_by(id=link_id).first().titel
-    print(titel)
 
-    comments = Comment.query.filter_by(link_id=link_id).order_by(desc(Comment.date_time)).all()
+    comments = Comment.query.filter_by(link_id=link_id).order_by(desc(Comment.upvotes)).all()
 
-    return render_template('comments.html', form=form, titel=titel, comments=comments)
+    return render_template('comments.html', link_id=link_id, form=form, titel=titel, comments=comments)
+
+
+@app.route('/comments/<int:link_id>/upvote/<int:comment_id>')
+def comment_upvote(link_id, comment_id):
+    comment = Comment.query.filter_by(id=comment_id).first()
+    comment.upvotes += 1
+    db.session.commit()
+
+    if 'voted_comments' in session:
+        session['voted_comments'].append(str(comment_id))
+    else:
+        session['voted_comments'] = []
+
+    return redirect('/comments/' + str(link_id))
 
 
 if __name__ == '__main__':

@@ -16,7 +16,7 @@
 	<table class="table table-striped table-hover">
 	{% for i, j in links %}
 		<tr>
-			{% if j.id|string() in session.voted %}
+			{% if j.id|string() in session.voted_links %}
 			<td>&#9650;</td>
 			{% else %}
 			<td><a href="/upvote/{{ j.id }}">&#9650;</a></td>
