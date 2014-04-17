@@ -23,7 +23,7 @@
 			{% endif %}
 			<td>
 				<a href="{{ j.url }}">{{ j.titel }}</a>
-				<br /><small>{{ j.upvotes }} upvotes | <a href="/comments/{{ j.id }}">{% if comment_count[i] > 0 %}{{ comment_count[i] }} comments{% else %}discuss{% endif %}</a></small>
+				<br /><small>{{ j.upvotes }} upvotes | <a href="/comments/{{ j.id }}">{% if counter[i] > 0 %}{{ counter[i] }} comments{% else %}discuss{% endif %}</a></small>
 			</td>
 		</tr>
 	{% endfor %}

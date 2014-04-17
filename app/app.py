@@ -19,6 +19,14 @@ db = SQLAlchemy(app)
 Bootstrap(app)
 
 
+def comment_counter(links):
+    counter = []
+    for link in links:
+        counter.append(len(Comment.query.filter_by(link_id=link.id).all()))
+
+    return counter
+
+
 class Link(db.Model):
     ''' sqlalchemy stuff magic '''
     id = db.Column(db.Integer(), primary_key=True)
@@ -94,14 +102,12 @@ def index():
         Link.date_time > twenty_four_hours_ago).order_by(
         desc(Link.upvotes)).limit(30)
 
-    comment_count = []
-    for link in links:
-        comment_count.append(len(Comment.query.filter_by(link_id=link.id).all()))
+    counter = comment_counter(links)
 
     if 'voted' not in session:
             session['voted'] = []
 
-    return render_template('index.html', links=enumerate(links), comment_count=comment_count)
+    return render_template('index.html', links=enumerate(links), counter=counter)
 
 
 @app.route('/new')
@@ -112,7 +118,10 @@ def new():
     links = Link.query.filter(
         Link.date_time > twenty_four_hours_ago).order_by(
         desc(Link.date_time)).limit(30)
-    return render_template('index.html', links=links)
+
+    counter = comment_counter(links)
+
+    return render_template('index.html', links=enumerate(links), counter=counter)
 
 
 @app.route('/submit', methods=('GET', 'POST'))
