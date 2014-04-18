@@ -33,22 +33,25 @@ class Link(db.Model):
     url = db.Column(db.String())
     titel = db.Column(db.String())
     date_time = db.Column(db.DateTime())
+    last_activity = db.Column(db.DateTime())
     upvotes = db.Column(db.Integer())
 
     comments = db.relationship('Comment',
                                backref='link', lazy='dynamic')
 
-    def __init__(self, url, titel, date_time, upvotes):
+    def __init__(self, url, titel, date_time, last_activity, upvotes):
             self.url = url
             self.titel = titel
             self.date_time = date_time
+            self.last_activity = last_activity
             self.upvotes = upvotes
 
     def __repr__(self):
-            return '<Link(%r, %r, %r, %r)>' % (self.url,
-                                               self.titel,
-                                               self.date_time,
-                                               self.upvotes)
+            return '<Link(%r, %r, %r, %r, %r)>' % (self.url,
+                                                   self.titel,
+                                                   self.date_time,
+                                                   self.last_activity,
+                                                   self.upvotes)
 
 
 class Comment(db.Model):
@@ -99,7 +102,7 @@ def index():
     twenty_four_hours_ago = datetime.datetime.utcnow(
         ) - datetime.timedelta(hours=HOURS_TO_LIVE_FRONTPAGE)
     links = Link.query.filter(
-        Link.date_time > twenty_four_hours_ago).order_by(
+        Link.last_activity > twenty_four_hours_ago).order_by(
         desc(Link.upvotes)).limit(30)
 
     counter = comment_counter(links)
@@ -107,7 +110,9 @@ def index():
     if 'voted' not in session:
             session['voted'] = []
 
-    return render_template('index.html', links=enumerate(links), counter=counter)
+    return render_template('index.html',
+                           links=enumerate(links),
+                           counter=counter)
 
 
 @app.route('/new')
@@ -121,7 +126,9 @@ def new():
 
     counter = comment_counter(links)
 
-    return render_template('index.html', links=enumerate(links), counter=counter)
+    return render_template('index.html',
+                           links=enumerate(links),
+                           counter=counter)
 
 
 @app.route('/submit', methods=('GET', 'POST'))
@@ -131,6 +138,7 @@ def submit():
     if form.validate_on_submit():
         link = Link(form.url.data,
                     form.titel.data,
+                    datetime.datetime.utcnow(),
                     datetime.datetime.utcnow(),
                     0)
         db.session.add(link)
@@ -148,6 +156,7 @@ def upvote(link_id):
     ''' upvotes a link and doing some session stuff '''
     link = Link.query.filter_by(id=link_id).first()
     link.upvotes += 1
+    link.last_activity = datetime.datetime.utcnow()
     db.session.commit()
 
     if 'voted_links' in session:
@@ -170,6 +179,8 @@ def comments(link_id):
                           0,
                           link_id)
         db.session.add(comment)
+        link = Link.query.filter_by(id=link_id).first()
+        link.last_activity = datetime.datetime.utcnow()
         db.session.commit()
 
         flash('Added comment')
@@ -180,13 +191,19 @@ def comments(link_id):
 
     comments = Comment.query.filter_by(link_id=link_id).order_by(desc(Comment.upvotes)).all()
 
-    return render_template('comments.html', link_id=link_id, form=form, titel=titel, comments=comments)
+    return render_template('comments.html',
+                           link_id=link_id,
+                           form=form,
+                           titel=titel,
+                           comments=comments)
 
 
 @app.route('/comments/<int:link_id>/upvote/<int:comment_id>')
 def comment_upvote(link_id, comment_id):
     comment = Comment.query.filter_by(id=comment_id).first()
     comment.upvotes += 1
+    link = Link.query.filter_by(id=link_id).first()
+    link.last_activity = datetime.datetime.utcnow()
     db.session.commit()
 
     if 'voted_comments' in session:
