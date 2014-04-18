@@ -2,7 +2,7 @@
 SITENAME = 'fackernews'
 
 # URI of the database
-DB_URI = 'sqlite:///test.db'
+DB_URI = 'sqlite:///fackernews.db'
 
 # best made with 'os.urandom(24)'
 SECRETKEY = 'mysupperduppasecretkey'
@@ -12,3 +12,7 @@ HOURS_TO_LIVE_FRONTPAGE = 24
 
 # hours how long a link is maximal shown on the new-page
 HOURS_TO_LIVE_NEW = 24
+
+# recaptcha stuff
+RECAPTCHA_PUBLIC_KEY = ''
+RECAPTCHA_PRIVATE_KEY = ''

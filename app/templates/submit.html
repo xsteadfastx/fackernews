@@ -12,6 +12,10 @@
 		{{ form.hidden_tag() }}
 		{{ wtf.form_field(form.url) }}
 		{{ wtf.form_field(form.titel) }}
+		{% for error in form.recaptcha.errors %}
+		 	{{ error }}
+		{% endfor %}
+		{{ form.recaptcha }}
 		<p><button type="submit" class="btn btn-default" value="name">Submit</button></p>
 </div>
 {% endblock %}

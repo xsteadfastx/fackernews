@@ -2,7 +2,7 @@ import datetime
 from flask import Flask, render_template, redirect, session, flash
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
-from flask_wtf import Form
+from flask_wtf import Form, RecaptchaField
 from sqlalchemy import desc
 from wtforms import TextField, TextAreaField
 from wtforms.validators import Required, URL, Email, Optional
@@ -15,6 +15,8 @@ app = Flask(__name__)
 app.secret_key = SECRETKEY
 app.config['SITENAME'] = SITENAME
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
+app.config['RECAPTCHA_PUBLIC_KEY'] = RECAPTCHA_PUBLIC_KEY
+app.config['RECAPTCHA_PRIVATE_KEY'] = RECAPTCHA_PRIVATE_KEY
 db = SQLAlchemy(app)
 Bootstrap(app)
 
@@ -87,6 +89,7 @@ class Comment(db.Model):
 class LinkForm(Form):
     url = TextField('URL', validators=[Required(), URL()])
     titel = TextField('Titel', validators=[Required()])
+    recaptcha = RecaptchaField()
 
 
 class CommentForm(Form):
@@ -94,6 +97,7 @@ class CommentForm(Form):
     email = TextField('Email', validators=[Required(), Email()])
     website = TextField('Website', validators=[Optional(), URL()])
     message = TextAreaField('Message', validators=[Required()])
+    recaptcha = RecaptchaField()
 
 
 @app.route('/')

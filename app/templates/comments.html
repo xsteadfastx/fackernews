@@ -15,15 +15,6 @@
 		{% endif %}
 	{% endwith %}
 	<h1>{{ titel }}</h1>
-	<form class="form" role="form" action="" method="POST" enctype="login">
-		{{ form.hidden_tag() }}
-		{{ wtf.form_field(form.name) }}
-		{{ wtf.form_field(form.email) }}
-		{{ wtf.form_field(form.website) }}
-		{{ wtf.form_field(form.message) }}
-		<p><button type="submit" class="btn btn-default" value="name">Submit</button></p>
-
-	<hr />
 	<table class="table table-striped table-hover">
 	{% for comment in comments %}
 		<tr>
@@ -46,5 +37,17 @@
 		</tr>
 	{% endfor %}
 	</table>
+	<hr />
+	<form class="form" role="form" action="" method="POST" enctype="login">
+		{{ form.hidden_tag() }}
+		{{ wtf.form_field(form.name) }}
+		{{ wtf.form_field(form.email) }}
+		{{ wtf.form_field(form.website) }}
+		{{ wtf.form_field(form.message) }}
+		{% for error in form.recaptcha.errors %}
+		 	{{ error }}
+		{% endfor %}
+		{{ form.recaptcha }}
+		<p><button type="submit" class="btn btn-default" value="name">Submit</button></p>
 </div>
 {% endblock %}
