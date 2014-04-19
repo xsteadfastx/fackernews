@@ -30,7 +30,7 @@
 					{% if comment.id|string() in session.voted_comments %}
 					<br /><small>&#9650; {{ comment.name }} | {{ comment.date_time.strftime('%Y-%m-%d %H:%M') }}</small>
 					{% else %}
-					<br /><small><a href="/comments/{{ link_od }}/upvote/{{ comment.id }}">&#9650;</a> {{ comment.name }} | {{ comment.date_time.strftime('%Y-%m-%d %H:%M') }}</small>
+					<br /><small><a href="/comments/{{ link_id }}/upvote/{{ comment.id }}">&#9650;</a> {{ comment.name }} | {{ comment.date_time.strftime('%Y-%m-%d %H:%M') }}</small>
 					{% endif %}
 				{% endif %}
 			</td>
@@ -41,7 +41,6 @@
 	<form class="form" role="form" action="" method="POST" enctype="login">
 		{{ form.hidden_tag() }}
 		{{ wtf.form_field(form.name) }}
-		{{ wtf.form_field(form.email) }}
 		{{ wtf.form_field(form.website) }}
 		{{ wtf.form_field(form.message) }}
 		{% for error in form.recaptcha.errors %}

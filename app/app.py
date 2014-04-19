@@ -59,7 +59,6 @@ class Link(db.Model):
 class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String())
-    email = db.Column(db.String())
     website = db.Column(db.String())
     message = db.Column(db.Text())
     date_time = db.Column(db.DateTime())
@@ -67,10 +66,9 @@ class Comment(db.Model):
 
     link_id = db.Column(db.Integer, db.ForeignKey('link.id'))
 
-    def __init__(self, name, email, website,
+    def __init__(self, name, website,
                  message, date_time, upvotes, link_id):
         self.name = name
-        self.email = email
         self.website = website
         self.message = message
         self.date_time = date_time
@@ -78,8 +76,7 @@ class Comment(db.Model):
         self.link_id = link_id
 
     def __repr__(self):
-        return '<Comment(%r, %r, %r, %r, %r, %r)>' % (self.name,
-                                                      self.email,
+        return '<Comment(%r, %r, %r, %r, %r)>' % (self.name,
                                                       self.website,
                                                       self.message,
                                                       self.date_time,
@@ -94,7 +91,6 @@ class LinkForm(Form):
 
 class CommentForm(Form):
     name = TextField('Name', validators=[Required()])
-    email = TextField('Email', validators=[Required(), Email()])
     website = TextField('Website', validators=[Optional(), URL()])
     message = TextAreaField('Message', validators=[Required()])
     recaptcha = RecaptchaField()
@@ -176,7 +172,6 @@ def comments(link_id):
     form = CommentForm()
     if form.validate_on_submit():
         comment = Comment(form.name.data,
-                          form.email.data,
                           form.website.data,
                           form.message.data,
                           datetime.datetime.utcnow(),
