@@ -7,15 +7,26 @@
 
 {% block content %}
 <div class="container">
-	<h1>Submit</h1>
+	<div class="page-header">
+		<h1>Submit <small>Choose between URL or Text</small></h1>
+	</div>
+	{% with messages = get_flashed_messages(with_categories=true) %}
+		{% if messages %}
+			{% for category, message in messages %}
+			<div class="alert alert-{{ category }}"><strong>{{ message }}</strong></div>
+			{% endfor %}
+		{% endif %}
+	{% endwith %}
 	<form class="form" role="form" action="" method="POST" enctype="login">
 		{{ form.hidden_tag() }}
-		{{ wtf.form_field(form.url) }}
 		{{ wtf.form_field(form.titel) }}
+		{{ wtf.form_field(form.url) }}
+		{{ wtf.form_field(form.text) }}
 		{% for error in form.recaptcha.errors %}
 		 	{{ error }}
 		{% endfor %}
 		{{ form.recaptcha }}
+		<br />
 		<p><button type="submit" class="btn btn-default" value="name">Submit</button></p>
 </div>
 {% endblock %}

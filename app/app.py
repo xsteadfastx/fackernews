@@ -5,7 +5,7 @@ from flask_bootstrap import Bootstrap
 from flask_wtf import Form, RecaptchaField
 from sqlalchemy import desc
 from wtforms import TextField, TextAreaField
-from wtforms.validators import Required, URL, Email, Optional
+from wtforms.validators import Required, URL, Optional
 
 
 exec(open('fackernews.conf').read())
@@ -32,8 +32,9 @@ def comment_counter(links):
 class Link(db.Model):
     ''' sqlalchemy stuff magic '''
     id = db.Column(db.Integer(), primary_key=True)
-    url = db.Column(db.String())
     titel = db.Column(db.String())
+    url = db.Column(db.String())
+    text = db.Column(db.String())
     date_time = db.Column(db.DateTime())
     last_activity = db.Column(db.DateTime())
     upvotes = db.Column(db.Integer())
@@ -41,16 +42,18 @@ class Link(db.Model):
     comments = db.relationship('Comment',
                                backref='link', lazy='dynamic')
 
-    def __init__(self, url, titel, date_time, last_activity, upvotes):
-            self.url = url
+    def __init__(self, titel, url, text, date_time, last_activity, upvotes):
             self.titel = titel
+            self.url = url
+            self.text = text
             self.date_time = date_time
             self.last_activity = last_activity
             self.upvotes = upvotes
 
     def __repr__(self):
-            return '<Link(%r, %r, %r, %r, %r)>' % (self.url,
-                                                   self.titel,
+            return '<Link(%r, %r, %r, %r, %r, %r)>' % (self.titel,
+                                                   self.url,
+                                                   self.text,
                                                    self.date_time,
                                                    self.last_activity,
                                                    self.upvotes)
@@ -77,15 +80,16 @@ class Comment(db.Model):
 
     def __repr__(self):
         return '<Comment(%r, %r, %r, %r, %r)>' % (self.name,
-                                                      self.website,
-                                                      self.message,
-                                                      self.date_time,
-                                                      self.upvotes)
+                                                  self.website,
+                                                  self.message,
+                                                  self.date_time,
+                                                  self.upvotes)
 
 
 class LinkForm(Form):
-    url = TextField('URL', validators=[Required(), URL()])
     titel = TextField('Titel', validators=[Required()])
+    url = TextField('URL', validators=[URL(), Optional()])
+    text = TextAreaField('Text')
     recaptcha = RecaptchaField()
 
 
@@ -136,17 +140,22 @@ def submit():
     ''' adding new link '''
     form = LinkForm()
     if form.validate_on_submit():
-        link = Link(form.url.data,
-                    form.titel.data,
-                    datetime.datetime.utcnow(),
-                    datetime.datetime.utcnow(),
-                    0)
-        db.session.add(link)
-        db.session.commit()
+        if bool(form.url.data) ^ bool(form.text.data):
+            link = Link(form.titel.data,
+                        form.url.data,
+                        form.text.data,
+                        datetime.datetime.utcnow(),
+                        datetime.datetime.utcnow(),
+                        0)
+            db.session.add(link)
+            db.session.commit()
 
-        flash('Added link')
+            flash(u'Added link', 'success')
+            return redirect('/submit')
 
-        return redirect('/')
+        else:
+            flash(u'Choose between URL or Text', 'danger')
+            return redirect('/submit')
 
     return render_template('submit.html', form=form)
 
@@ -170,6 +179,7 @@ def upvote(link_id):
 @app.route('/comments/<int:link_id>', methods=('GET', 'POST'))
 def comments(link_id):
     form = CommentForm()
+    link = Link.query.filter_by(id=link_id).first()
     if form.validate_on_submit():
         comment = Comment(form.name.data,
                           form.website.data,
@@ -178,22 +188,18 @@ def comments(link_id):
                           0,
                           link_id)
         db.session.add(comment)
-        link = Link.query.filter_by(id=link_id).first()
         link.last_activity = datetime.datetime.utcnow()
         db.session.commit()
 
-        flash('Added comment')
+        flash(u'Added comment', 'success')
 
         return redirect('/comments/' + str(link_id))
-
-    titel = Link.query.filter_by(id=link_id).first().titel
 
     comments = Comment.query.filter_by(link_id=link_id).order_by(desc(Comment.upvotes)).all()
 
     return render_template('comments.html',
-                           link_id=link_id,
+                           link=link,
                            form=form,
-                           titel=titel,
                            comments=comments)
 
 
