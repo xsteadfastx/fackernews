@@ -10,9 +10,9 @@
 <div class="container">
 	<div class="page-header">
 		{% if link.url %}
-		<a href="{{ link.url }}"><h1>{{ link.titel }}</h1></a>
+		<a href="{{ link.url }}"><h1>{{ link.titel }} <small>({{ link_hostname }})</small></h1></a>
 		{% else %}
-		<h1>{{ link.titel }}</h1>
+		<h1>{{ link.titel }} <small>({{ link_hostname }})</small></h1>
 		{% endif %}
 	</div>
 	{% with messages = get_flashed_messages(with_categories=true) %}

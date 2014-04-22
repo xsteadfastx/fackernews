@@ -4,7 +4,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
 from flask_wtf import Form, RecaptchaField
 from sqlalchemy import desc
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 from werkzeug.contrib.atom import AtomFeed
 from wtforms import TextField, TextAreaField
 from wtforms.validators import Required, URL, Optional
@@ -240,6 +240,11 @@ def upvote(link_id):
 def comments(link_id):
     form = CommentForm()
     link = Link.query.filter_by(id=link_id).first()
+    if link.url:
+        link_hostname = urlparse(link.url).hostname
+    else:
+        link_hostname = urlparse(make_external('comments/%s' % str(link.id))).hostname
+
     if form.validate_on_submit():
         comment = Comment(form.name.data,
                           form.website.data,
@@ -259,6 +264,7 @@ def comments(link_id):
 
     return render_template('comments.html',
                            link=link,
+                           link_hostname=link_hostname,
                            form=form,
                            comments=comments)
 
