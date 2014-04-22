@@ -1,12 +1,13 @@
 import datetime
-from flask import Flask, render_template, redirect, session, flash
+from flask import Flask, render_template, redirect, session, flash, request
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
 from flask_wtf import Form, RecaptchaField
 from sqlalchemy import desc
+from urllib.parse import urljoin
+from werkzeug.contrib.atom import AtomFeed
 from wtforms import TextField, TextAreaField
 from wtforms.validators import Required, URL, Optional
-
 
 exec(open('fackernews.conf').read())
 
@@ -27,6 +28,10 @@ def comment_counter(links):
         counter.append(len(Comment.query.filter_by(link_id=link.id).all()))
 
     return counter
+
+
+def make_external(url):
+    return urljoin(request.url_root, url)
 
 
 class Link(db.Model):
@@ -52,11 +57,11 @@ class Link(db.Model):
 
     def __repr__(self):
             return '<Link(%r, %r, %r, %r, %r, %r)>' % (self.titel,
-                                                   self.url,
-                                                   self.text,
-                                                   self.date_time,
-                                                   self.last_activity,
-                                                   self.upvotes)
+                                                       self.url,
+                                                       self.text,
+                                                       self.date_time,
+                                                       self.last_activity,
+                                                       self.upvotes)
 
 
 class Comment(db.Model):
@@ -119,6 +124,28 @@ def index():
                            counter=counter)
 
 
+@app.route('/index.atom')
+def index_atom():
+    ''' feed for the frontpage '''
+    feed = AtomFeed(SITENAME,
+                    feed_url=request.url, url=request.url_root)
+
+    twenty_four_hours_ago = datetime.datetime.utcnow(
+        ) - datetime.timedelta(hours=HOURS_TO_LIVE_FRONTPAGE)
+    links = Link.query.filter(
+        Link.last_activity > twenty_four_hours_ago).order_by(
+        desc(Link.upvotes)).limit(30)
+
+    for link in links:
+        feed.add(link.titel,
+                 content_type='html',
+                 author=SITENAME,
+                 url=make_external('comments/%s' % str(link.id)),
+                 updated=link.date_time)
+
+    return feed.get_response()
+
+
 @app.route('/new')
 def new():
     ''' lists new links without ordering them '''
@@ -133,6 +160,28 @@ def new():
     return render_template('index.html',
                            links=enumerate(links),
                            counter=counter)
+
+
+@app.route('/new.atom')
+def new_atom():
+    ''' feed for the new links '''
+    feed = AtomFeed('Recent Links',
+                    feed_url=request.url, url=request.url_root)
+
+    twenty_four_hours_ago = datetime.datetime.utcnow(
+        ) - datetime.timedelta(hours=HOURS_TO_LIVE_NEW)
+    links = Link.query.filter(
+        Link.date_time > twenty_four_hours_ago).order_by(
+        desc(Link.date_time)).limit(30)
+
+    for link in links:
+        feed.add(link.titel,
+                 content_type='html',
+                 author=SITENAME,
+                 url=make_external('comments/%s' % str(link.id)),
+                 updated=link.date_time)
+
+    return feed.get_response()
 
 
 @app.route('/submit', methods=('GET', 'POST'))
