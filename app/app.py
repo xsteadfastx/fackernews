@@ -138,7 +138,12 @@ def new():
 @app.route('/submit', methods=('GET', 'POST'))
 def submit():
     ''' adding new link '''
-    form = LinkForm()
+    # if there is data from a fail submit, prefill forms
+    if session['submit_data']:
+        data = session['submit_data']
+        form = LinkForm(titel=data[0], url=data[1], text=data[2])
+    else:
+        form = LinkForm()
     if form.validate_on_submit():
         if bool(form.url.data) ^ bool(form.text.data):
             link = Link(form.titel.data,
@@ -150,11 +155,17 @@ def submit():
             db.session.add(link)
             db.session.commit()
 
-            flash(u'Added link', 'success')
+            flash('Added link', 'success')
+            session['submit_data'] = []
+
             return redirect('/submit')
 
         else:
-            flash(u'Choose between URL or Text', 'danger')
+            flash('Choose between URL or Text', 'danger')
+            session['submit_data'] = [form.titel.data,
+                                      form.url.data,
+                                      form.text.data]
+
             return redirect('/submit')
 
     return render_template('submit.html', form=form)
@@ -172,6 +183,8 @@ def upvote(link_id):
         session['voted_links'].append(str(link_id))
     else:
         session['voted_links'] = []
+
+    flash('Upvoted', 'success')
 
     return redirect('/')
 
@@ -191,7 +204,7 @@ def comments(link_id):
         link.last_activity = datetime.datetime.utcnow()
         db.session.commit()
 
-        flash(u'Added comment', 'success')
+        flash('Added comment', 'success')
 
         return redirect('/comments/' + str(link_id))
 
@@ -215,6 +228,8 @@ def comment_upvote(link_id, comment_id):
         session['voted_comments'].append(str(comment_id))
     else:
         session['voted_comments'] = []
+
+    flash('Upvoted', 'success')
 
     return redirect('/comments/' + str(link_id))
 
