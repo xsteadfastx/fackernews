@@ -5,6 +5,7 @@
 {% include "navbar.html" %}
 
 {% block content %}
+{% include "github.html" %}
 <div class="container">
 	{% with messages = get_flashed_messages(with_categories=true) %}
 		{% if messages %}

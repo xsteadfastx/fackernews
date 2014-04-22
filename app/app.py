@@ -188,7 +188,7 @@ def new_atom():
 def submit():
     ''' adding new link '''
     # if there is data from a fail submit, prefill forms
-    if session['submit_data']:
+    if 'submit_data' in session and session['submit_data']:
         data = session['submit_data']
         form = LinkForm(titel=data[0], url=data[1], text=data[2])
     else:
