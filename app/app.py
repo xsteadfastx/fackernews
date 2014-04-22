@@ -233,8 +233,6 @@ def upvote(link_id):
     else:
         session['voted_links'] = []
 
-    flash('Upvoted', 'success')
-
     return redirect('/')
 
 
@@ -277,8 +275,6 @@ def comment_upvote(link_id, comment_id):
         session['voted_comments'].append(str(comment_id))
     else:
         session['voted_comments'] = []
-
-    flash('Upvoted', 'success')
 
     return redirect('/comments/' + str(link_id))
 
