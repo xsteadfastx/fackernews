@@ -10,7 +10,7 @@
 <div class="container">
 	<div class="page-header">
 		{% if link.url %}
-		<a href="{{ link.url }}"><h1>{{ link.titel }} <small>({{ link_hostname }})</small></h1></a>
+		<h1><a href="{{ link.url }}">{{ link.titel }}</a> <small>({{ link_hostname }})</small></h1>
 		{% else %}
 		<h1>{{ link.titel }} <small>({{ link_hostname }})</small></h1>
 		{% endif %}

@@ -24,9 +24,9 @@
 			{% endif %}
 			<td>
 				{% if j.text %}
-				<a href="/comments/{{ j.id }}">{{ j.titel }}</a>
+				<a href="/comments/{{ j.id }}">{{ j.titel }}</a> <small>({{ link_hostnames[i] }})</small>
 				{% else %}
-				<a href="{{ j.url }}">{{ j.titel }}</a>
+				<a href="{{ j.url }}">{{ j.titel }}</a> <small>({{ link_hostnames[i] }})</small>
 				{% endif %}
 				<br /><small>{{ j.upvotes }} upvotes | <a href="/comments/{{ j.id }}">{% if counter[i] > 0 %}{{ counter[i] }} comments{% else %}discuss{% endif %}</a></small>
 			</td>

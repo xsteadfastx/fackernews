@@ -108,11 +108,18 @@ class CommentForm(Form):
 @app.route('/')
 def index():
     ''' frontpage '''
-    twenty_four_hours_ago = datetime.datetime.utcnow(
+    hours_ago = datetime.datetime.utcnow(
         ) - datetime.timedelta(hours=HOURS_TO_LIVE_FRONTPAGE)
     links = Link.query.filter(
-        Link.last_activity > twenty_four_hours_ago).order_by(
+        Link.last_activity > hours_ago).order_by(
         desc(Link.upvotes)).limit(30)
+
+    link_hostnames = []
+    for link in links:
+        if link.url:
+            link_hostnames.append(urlparse(link.url).hostname)
+        else:
+            link_hostnames.append(urlparse(make_external('comments/%s' % str(link.id))).hostname)
 
     counter = comment_counter(links)
 
@@ -121,6 +128,7 @@ def index():
 
     return render_template('index.html',
                            links=enumerate(links),
+                           link_hostnames=link_hostnames,
                            counter=counter)
 
 
@@ -149,16 +157,24 @@ def index_atom():
 @app.route('/new')
 def new():
     ''' lists new links without ordering them '''
-    twenty_four_hours_ago = datetime.datetime.utcnow(
+    hours_ago = datetime.datetime.utcnow(
         ) - datetime.timedelta(hours=HOURS_TO_LIVE_NEW)
     links = Link.query.filter(
-        Link.date_time > twenty_four_hours_ago).order_by(
+        Link.date_time > hours_ago).order_by(
         desc(Link.date_time)).limit(30)
+
+    link_hostnames = []
+    for link in links:
+        if link.url:
+            link_hostnames.append(urlparse(link.url).hostname)
+        else:
+            link_hostnames.append(urlparse(make_external('comments/%s' % str(link.id))).hostname)
 
     counter = comment_counter(links)
 
     return render_template('index.html',
                            links=enumerate(links),
+                           link_hostnames=link_hostnames,
                            counter=counter)
 
 
