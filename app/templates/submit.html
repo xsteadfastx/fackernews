@@ -1,12 +1,15 @@
 {% extends "bootstrap/base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 
+{% block styles %}
+{{super()}}
+<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+{% endblock %}
+
 {% block title %}{{ config.SITENAME }}{% endblock %}
 
-{% include "navbar.html" %}
-
 {% block content %}
-{% include "github.html" %}
+{% include "navbar.html" %}
 <div class="container">
 	<div class="page-header">
 		<h1>Submit <small>Choose between URL or Text</small></h1>
@@ -30,4 +33,5 @@
 		<br />
 		<p><button type="submit" class="btn btn-default" value="name">Submit</button></p>
 </div>
+{% include "footer.html" %}
 {% endblock %}

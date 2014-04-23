@@ -1,11 +1,14 @@
 {% extends "bootstrap/base.html" %}
 
+{% block styles %}
+{{super()}}
+<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+{% endblock %}
+
 {% block title %}{{ config.SITENAME }}{% endblock %}
 
-{% include "navbar.html" %}
-
 {% block content %}
-{% include "github.html" %}
+{% include "navbar.html" %}
 <div class="container">
 	{% with messages = get_flashed_messages(with_categories=true) %}
 		{% if messages %}
@@ -18,9 +21,9 @@
 	{% for i, j in links %}
 		<tr>
 			{% if j.id|string() in session.voted_links %}
-			<td>&#9650;</td>
+			<td><i class="fa fa-chevron-up"></i></td>
 			{% else %}
-			<td><a href="/upvote/{{ j.id }}">&#9650;</a></td>
+			<td><a href="/upvote/{{ j.id }}"><i class="fa fa-chevron-up"></i></a></td>
 			{% endif %}
 			<td>
 				{% if j.text %}
@@ -33,5 +36,7 @@
 		</tr>
 	{% endfor %}
 	</table>
+
 </div>
+{% include "footer.html" %}
 {% endblock %}
