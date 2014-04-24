@@ -32,24 +32,26 @@
 	{% for comment in comments %}
 		<tr>
 			<td>
-				{{ comment.message }}
 				{% if comment.website %}
 					{% if comment.id|string() in session.voted_comments %}
-					<br /><small><i class="fa fa-chevron-up"></i> <a href="{{ comment.website }}">{{ comment.name }}</a> | {{ comment.date_time.strftime('%Y-%m-%d %H:%M') }}</small>
+					<small><i class="fa fa-chevron-up"></i> <a href="{{ comment.website }}">{{ comment.name }}</a> | {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
 					{% else %}
-					<br /><small><a href="/comments/{{ link.id }}/upvote/{{ comment.id }}"><i class="fa fa-chevron-up"></i></a> <a href="{{ comment.website }}">{{ comment.name }}</a> | {{ comment.date_time.strftime('%Y-%m-%d %H:%M') }}</small>
+					<small><a href="/comments/{{ link.id }}/upvote/{{ comment.id }}"><i class="fa fa-chevron-up"></i></a> <a href="{{ comment.website }}">{{ comment.name }}</a> | {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
 					{% endif %}
 				{% else %}
 					{% if comment.id|string() in session.voted_comments %}
-					<br /><small><i class="fa fa-chevron-up"></i> {{ comment.name }} | {{ comment.date_time.strftime('%Y-%m-%d %H:%M') }}</small>
+					<small><i class="fa fa-chevron-up"></i> {{ comment.name }} | {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
 					{% else %}
-					<br /><small><a href="/comments/{{ link.id }}/upvote/{{ comment.id }}"><i class="fa fa-chevron-up"></i></a> {{ comment.name }} | {{ comment.date_time.strftime('%Y-%m-%d %H:%M') }}</small>
+					<small><a href="/comments/{{ link.id }}/upvote/{{ comment.id }}"><i class="fa fa-chevron-up"></i></a> {{ comment.name }} | {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
 					{% endif %}
 				{% endif %}
+				<br />
+				{{ comment.message }}
 			</td>
 		</tr>
 	{% endfor %}
 	</table>
+	<hr />
 	<form class="form" role="form" action="" method="POST" enctype="login">
 		{{ form.hidden_tag() }}
 		{{ wtf.form_field(form.name) }}
@@ -59,6 +61,7 @@
 		 	{{ error }}
 		{% endfor %}
 		{{ form.recaptcha }}
+		<br />
 		<p><button type="submit" class="btn btn-default" value="name">Submit</button></p>
 </div>
 {% include "footer.html" %}

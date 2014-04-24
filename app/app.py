@@ -1,13 +1,14 @@
+import bson
 import datetime
 from flask import Flask, render_template, redirect, session, flash, request
-from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.mongoengine import MongoEngine
 from flask_bootstrap import Bootstrap
 from flask_wtf import Form, RecaptchaField
-from sqlalchemy import desc
 from urllib.parse import urljoin, urlparse
 from werkzeug.contrib.atom import AtomFeed
 from wtforms import TextField, TextAreaField
 from wtforms.validators import Required, URL, Optional
+
 
 exec(open('fackernews.conf').read())
 
@@ -15,17 +16,17 @@ exec(open('fackernews.conf').read())
 app = Flask(__name__)
 app.secret_key = SECRETKEY
 app.config['SITENAME'] = SITENAME
-app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
+app.config['MONGODB_SETTINGS'] = MONGODB_SETTINGS
 app.config['RECAPTCHA_PUBLIC_KEY'] = RECAPTCHA_PUBLIC_KEY
 app.config['RECAPTCHA_PRIVATE_KEY'] = RECAPTCHA_PRIVATE_KEY
-db = SQLAlchemy(app)
+db = MongoEngine(app)
 Bootstrap(app)
 
 
 def comment_counter(links):
     counter = []
     for link in links:
-        counter.append(len(Comment.query.filter_by(link_id=link.id).all()))
+        counter.append(len(link.comments))
 
     return counter
 
@@ -34,61 +35,32 @@ def make_external(url):
     return urljoin(request.url_root, url)
 
 
-class Link(db.Model):
-    ''' sqlalchemy stuff magic '''
-    id = db.Column(db.Integer(), primary_key=True)
-    titel = db.Column(db.String())
-    url = db.Column(db.String())
-    text = db.Column(db.String())
-    date_time = db.Column(db.DateTime())
-    last_activity = db.Column(db.DateTime())
-    upvotes = db.Column(db.Integer())
+class Link(db.Document):
+    ''' mongo magic '''
+    titel = db.StringField(max_length=255, required=True)
+    url = db.StringField(max_length=255)
+    text = db.StringField()
+    created_at = db.DateTimeField(
+        default=datetime.datetime.utcnow(), required=True)
+    last_activity = db.DateTimeField(
+        default=datetime.datetime.utcnow(), required=True)
+    upvotes = db.IntField()
+    comments = db.SortedListField(db.EmbeddedDocumentField('Comment'),
+                                  ordering='upvotes', reverse=True)
 
-    comments = db.relationship('Comment',
-                               backref='link', lazy='dynamic')
-
-    def __init__(self, titel, url, text, date_time, last_activity, upvotes):
-            self.titel = titel
-            self.url = url
-            self.text = text
-            self.date_time = date_time
-            self.last_activity = last_activity
-            self.upvotes = upvotes
-
-    def __repr__(self):
-            return '<Link(%r, %r, %r, %r, %r, %r)>' % (self.titel,
-                                                       self.url,
-                                                       self.text,
-                                                       self.date_time,
-                                                       self.last_activity,
-                                                       self.upvotes)
+    meta = {'allow_inheritance': True,
+            'indexes': ['-created_at']}
 
 
-class Comment(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String())
-    website = db.Column(db.String())
-    message = db.Column(db.Text())
-    date_time = db.Column(db.DateTime())
-    upvotes = db.Column(db.Integer())
-
-    link_id = db.Column(db.Integer, db.ForeignKey('link.id'))
-
-    def __init__(self, name, website,
-                 message, date_time, upvotes, link_id):
-        self.name = name
-        self.website = website
-        self.message = message
-        self.date_time = date_time
-        self.upvotes = upvotes
-        self.link_id = link_id
-
-    def __repr__(self):
-        return '<Comment(%r, %r, %r, %r, %r)>' % (self.name,
-                                                  self.website,
-                                                  self.message,
-                                                  self.date_time,
-                                                  self.upvotes)
+class Comment(db.EmbeddedDocument):
+    ''' mongo magic '''
+    id = db.ObjectIdField(required=True, default=lambda: bson.ObjectId())
+    name = db.StringField(verbose_name='Name', max_length=255, required=True)
+    website = db.StringField(max_length=255)
+    message = db.StringField(verbose_name='Comment', required=True)
+    created_at = db.DateTimeField(
+        default=datetime.datetime.utcnow(), required=True)
+    upvotes = db.IntField()
 
 
 class LinkForm(Form):
@@ -110,16 +82,17 @@ def index():
     ''' frontpage '''
     hours_ago = datetime.datetime.utcnow(
         ) - datetime.timedelta(hours=HOURS_TO_LIVE_FRONTPAGE)
-    links = Link.query.filter(
-        Link.last_activity > hours_ago).order_by(
-        desc(Link.upvotes)).limit(30)
+
+    links = Link.objects(last_activity__gt=hours_ago).order_by('-upvotes')[:30]
 
     link_hostnames = []
     for link in links:
         if link.url:
             link_hostnames.append(urlparse(link.url).hostname)
         else:
-            link_hostnames.append(urlparse(make_external('comments/%s' % str(link.id))).hostname)
+            link_hostnames.append(
+                urlparse(make_external(
+                    'comments/%s' % str(link.id))).hostname)
 
     counter = comment_counter(links)
 
@@ -138,18 +111,17 @@ def index_atom():
     feed = AtomFeed(SITENAME,
                     feed_url=request.url, url=request.url_root)
 
-    twenty_four_hours_ago = datetime.datetime.utcnow(
+    hours_ago = datetime.datetime.utcnow(
         ) - datetime.timedelta(hours=HOURS_TO_LIVE_FRONTPAGE)
-    links = Link.query.filter(
-        Link.last_activity > twenty_four_hours_ago).order_by(
-        desc(Link.upvotes)).limit(30)
+
+    links = Link.objects(last_activity__gt=hours_ago).order_by('-upvotes')[:30]
 
     for link in links:
         feed.add(link.titel,
                  content_type='html',
                  author=SITENAME,
                  url=make_external('comments/%s' % str(link.id)),
-                 updated=link.date_time)
+                 updated=link.created_at)
 
     return feed.get_response()
 
@@ -159,16 +131,17 @@ def new():
     ''' lists new links without ordering them '''
     hours_ago = datetime.datetime.utcnow(
         ) - datetime.timedelta(hours=HOURS_TO_LIVE_NEW)
-    links = Link.query.filter(
-        Link.date_time > hours_ago).order_by(
-        desc(Link.date_time)).limit(30)
+
+    links = Link.objects(
+        last_activity__gt=hours_ago).order_by('-created_at')[:30]
 
     link_hostnames = []
     for link in links:
         if link.url:
             link_hostnames.append(urlparse(link.url).hostname)
         else:
-            link_hostnames.append(urlparse(make_external('comments/%s' % str(link.id))).hostname)
+            link_hostnames.append(
+                urlparse(make_external('comments/%s' % str(link.id))).hostname)
 
     counter = comment_counter(links)
 
@@ -184,18 +157,18 @@ def new_atom():
     feed = AtomFeed('Recent Links',
                     feed_url=request.url, url=request.url_root)
 
-    twenty_four_hours_ago = datetime.datetime.utcnow(
+    hours_ago = datetime.datetime.utcnow(
         ) - datetime.timedelta(hours=HOURS_TO_LIVE_NEW)
-    links = Link.query.filter(
-        Link.date_time > twenty_four_hours_ago).order_by(
-        desc(Link.date_time)).limit(30)
+
+    links = Link.objects(
+        last_activity__gt=hours_ago).order_by('-created_at')[:30]
 
     for link in links:
         feed.add(link.titel,
                  content_type='html',
                  author=SITENAME,
                  url=make_external('comments/%s' % str(link.id)),
-                 updated=link.date_time)
+                 updated=link.created_at)
 
     return feed.get_response()
 
@@ -211,14 +184,13 @@ def submit():
         form = LinkForm()
     if form.validate_on_submit():
         if bool(form.url.data) ^ bool(form.text.data):
-            link = Link(form.titel.data,
-                        form.url.data,
-                        form.text.data,
-                        datetime.datetime.utcnow(),
-                        datetime.datetime.utcnow(),
-                        0)
-            db.session.add(link)
-            db.session.commit()
+            link = Link(titel=form.titel.data,
+                        url=form.url.data,
+                        text=form.text.data,
+                        created_at=datetime.datetime.utcnow(),
+                        last_activity=datetime.datetime.utcnow(),
+                        upvotes=0)
+            link.save()
 
             flash('Added link', 'success')
             session['submit_data'] = []
@@ -236,13 +208,13 @@ def submit():
     return render_template('submit.html', form=form)
 
 
-@app.route('/upvote/<int:link_id>')
+@app.route('/upvote/<link_id>')
 def upvote(link_id):
     ''' upvotes a link and doing some session stuff '''
-    link = Link.query.filter_by(id=link_id).first()
+    link = Link.objects(id=link_id).first()
     link.upvotes += 1
     link.last_activity = datetime.datetime.utcnow()
-    db.session.commit()
+    link.save()
 
     if 'voted_links' in session:
         session['voted_links'].append(str(link_id))
@@ -252,31 +224,32 @@ def upvote(link_id):
     return redirect('/')
 
 
-@app.route('/comments/<int:link_id>', methods=('GET', 'POST'))
+@app.route('/comments/<link_id>', methods=('GET', 'POST'))
 def comments(link_id):
     form = CommentForm()
-    link = Link.query.filter_by(id=link_id).first()
+    link = Link.objects(id=link_id).first()
     if link.url:
         link_hostname = urlparse(link.url).hostname
     else:
-        link_hostname = urlparse(make_external('comments/%s' % str(link.id))).hostname
+        link_hostname = urlparse(
+            make_external('comments/%s' % str(link.id))).hostname
 
     if form.validate_on_submit():
-        comment = Comment(form.name.data,
-                          form.website.data,
-                          form.message.data,
-                          datetime.datetime.utcnow(),
-                          0,
-                          link_id)
-        db.session.add(comment)
+        link = Link.objects(id=link_id).first()
+        comment = Comment(name=form.name.data,
+                          website=form.website.data,
+                          message=form.message.data,
+                          created_at=datetime.datetime.utcnow(),
+                          upvotes=0)
+        link.comments.append(comment)
         link.last_activity = datetime.datetime.utcnow()
-        db.session.commit()
+        link.save()
 
         flash('Added comment', 'success')
 
         return redirect('/comments/' + str(link_id))
 
-    comments = Comment.query.filter_by(link_id=link_id).order_by(desc(Comment.upvotes)).all()
+    comments = link.comments
 
     return render_template('comments.html',
                            link=link,
@@ -285,13 +258,15 @@ def comments(link_id):
                            comments=comments)
 
 
-@app.route('/comments/<int:link_id>/upvote/<int:comment_id>')
+@app.route('/comments/<link_id>/upvote/<comment_id>')
 def comment_upvote(link_id, comment_id):
-    comment = Comment.query.filter_by(id=comment_id).first()
-    comment.upvotes += 1
-    link = Link.query.filter_by(id=link_id).first()
+    link = Link.objects(id=link_id).first()
+    for i in link.comments:
+        if str(comment_id) == str(i.id):
+            i.upvotes += 1
+
     link.last_activity = datetime.datetime.utcnow()
-    db.session.commit()
+    link.save()
 
     if 'voted_comments' in session:
         session['voted_comments'].append(str(comment_id))

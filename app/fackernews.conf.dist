@@ -1,8 +1,8 @@
 # name of the site
 SITENAME = 'fackernews'
 
-# URI of the database
-DB_URI = 'sqlite:///fackernews.db'
+# settings for mongodb 
+MONGODB_SETTINGS = {'DB': 'fackernews'}
 
 # best made with 'os.urandom(24)'
 SECRETKEY = 'mysupperduppasecretkey'
