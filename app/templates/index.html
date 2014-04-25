@@ -31,7 +31,7 @@
 				{% else %}
 				<a href="{{ j.url }}">{{ j.titel }}</a> <small>({{ link_hostnames[i] }})</small>
 				{% endif %}
-				{% if j.website %}
+				{% if j.user_website %}
 				<br /><small> by <a href="{{ j.user_website }}">{{j.user }}</a> | {{ j.upvotes }} upvotes | <a href="/comments/{{ j.id }}">{% if counter[i] == 1 %}{{ counter[i] }} comment{% elif counter[i] > 0 %}{{ counter[i] }} comments{% else %}discuss{% endif %}</a></small>
 				{% else %}
 				<br /><small> by {{j.user }} | {{ j.upvotes }} upvotes | <a href="/comments/{{ j.id }}">{% if counter[i] == 1 %}{{ counter[i] }} comment{% elif counter[i] > 0 %}{{ counter[i] }} comments{% else %}discuss{% endif %}</a></small>
