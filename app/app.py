@@ -192,6 +192,12 @@ def submit():
                         upvotes=0)
             link.save()
 
+            # append id to voted_links if its you who submitted the link
+            if 'voted_links' in session:
+                session['voted_links'].append(str(link.id))
+            else:
+                session['voted_links'] = []
+
             flash('Added link', 'success')
             session['submit_data'] = []
 
@@ -244,6 +250,12 @@ def comments(link_id):
         link.comments.append(comment)
         link.last_activity = datetime.datetime.utcnow()
         link.save()
+
+        # append id to voted_comments if its you who submitted the comment
+        if 'voted_comments' in session:
+            session['voted_comments'].append(str(comment.id))
+        else:
+            session['voted_comments'] = []
 
         flash('Added comment', 'success')
 
