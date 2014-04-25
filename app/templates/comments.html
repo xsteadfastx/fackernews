@@ -17,6 +17,11 @@
 		{% else %}
 		<h1>{{ link.titel }} <small>({{ link_hostname }})</small></h1>
 		{% endif %}
+		{% if link.user_website %}
+		<small>by <a href="{{ link.user_website }}">{{ link.user }}</a> | {{ link.upvotes }} upvotes</small>
+		{% else %}
+		<small>by {{ link.user }} | {{ link.upvotes }} upvotes</small>
+		{% endif %}
 	</div>
 	{% with messages = get_flashed_messages(with_categories=true) %}
 		{% if messages %}
@@ -32,17 +37,17 @@
 	{% for comment in comments %}
 		<tr>
 			<td>
-				{% if comment.website %}
+				{% if comment.user_website %}
 					{% if comment.id|string() in session.voted_comments %}
-					<small><i class="fa fa-chevron-up"></i> <a href="{{ comment.website }}">{{ comment.name }}</a> | {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+					<small><i class="fa fa-chevron-up"></i> <a href="{{ comment.user_website }}">{{ comment.user }}</a> | {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
 					{% else %}
-					<small><a href="/comments/{{ link.id }}/upvote/{{ comment.id }}"><i class="fa fa-chevron-up"></i></a> <a href="{{ comment.website }}">{{ comment.name }}</a> | {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+					<small><a href="/comments/{{ link.id }}/upvote/{{ comment.id }}"><i class="fa fa-chevron-up"></i></a> <a href="{{ comment.user_website }}">{{ comment.user }}</a> | {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
 					{% endif %}
 				{% else %}
 					{% if comment.id|string() in session.voted_comments %}
-					<small><i class="fa fa-chevron-up"></i> {{ comment.name }} | {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+					<small><i class="fa fa-chevron-up"></i> {{ comment.user }} | {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
 					{% else %}
-					<small><a href="/comments/{{ link.id }}/upvote/{{ comment.id }}"><i class="fa fa-chevron-up"></i></a> {{ comment.name }} | {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+					<small><a href="/comments/{{ link.id }}/upvote/{{ comment.id }}"><i class="fa fa-chevron-up"></i></a> {{ comment.user }} | {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
 					{% endif %}
 				{% endif %}
 				<br />
@@ -54,15 +59,16 @@
 	<hr />
 	<form class="form" role="form" action="" method="POST" enctype="login">
 		{{ form.hidden_tag() }}
-		{{ wtf.form_field(form.name) }}
-		{{ wtf.form_field(form.website) }}
+		{{ wtf.form_field(form.user) }}
+		{{ wtf.form_field(form.user_website) }}
 		{{ wtf.form_field(form.message) }}
 		{% for error in form.recaptcha.errors %}
 		 	{{ error }}
 		{% endfor %}
 		{{ form.recaptcha }}
 		<br />
-		<p><button type="submit" class="btn btn-default" value="name">Submit</button></p>
+		<p><button type="submit" class="btn btn-primary" value="name">Submit</button></p>
+	</form>
 </div>
 {% include "footer.html" %}
 {% endblock %}

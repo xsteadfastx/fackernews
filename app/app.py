@@ -7,7 +7,7 @@ from flask_wtf import Form, RecaptchaField
 from urllib.parse import urljoin, urlparse
 from werkzeug.contrib.atom import AtomFeed
 from wtforms import TextField, TextAreaField
-from wtforms.validators import Required, URL, Optional
+from wtforms.validators import Required, URL, Optional, Length
 
 
 exec(open('fackernews.conf').read())
@@ -40,6 +40,8 @@ class Link(db.Document):
     titel = db.StringField(max_length=255, required=True)
     url = db.StringField(max_length=255)
     text = db.StringField()
+    user = db.StringField(max_length=255, required=True)
+    user_website = db.StringField(max_length=255)
     created_at = db.DateTimeField(
         default=datetime.datetime.utcnow(), required=True)
     last_activity = db.DateTimeField(
@@ -55,24 +57,26 @@ class Link(db.Document):
 class Comment(db.EmbeddedDocument):
     ''' mongo magic '''
     id = db.ObjectIdField(required=True, default=lambda: bson.ObjectId())
-    name = db.StringField(verbose_name='Name', max_length=255, required=True)
-    website = db.StringField(max_length=255)
-    message = db.StringField(verbose_name='Comment', required=True)
+    user = db.StringField(max_length=255, required=True)
+    user_website = db.StringField(max_length=255)
+    message = db.StringField(required=True)
     created_at = db.DateTimeField(
         default=datetime.datetime.utcnow(), required=True)
     upvotes = db.IntField()
 
 
 class LinkForm(Form):
-    titel = TextField('Titel', validators=[Required()])
-    url = TextField('URL', validators=[URL(), Optional()])
+    titel = TextField('Titel', validators=[Required(), Length(max=255)])
+    url = TextField('URL', validators=[URL(), Optional(), Length(max=255)])
     text = TextAreaField('Text')
+    user = TextField('Name', validators=[Required(), Length(max=255)])
+    user_website = TextField('Website', validators=[URL(), Optional(), Length(max=255)])
     recaptcha = RecaptchaField()
 
 
 class CommentForm(Form):
-    name = TextField('Name', validators=[Required()])
-    website = TextField('Website', validators=[Optional(), URL()])
+    user = TextField('Name', validators=[Required()])
+    user_website = TextField('Website', validators=[Optional(), URL()])
     message = TextAreaField('Message', validators=[Required()])
     recaptcha = RecaptchaField()
 
@@ -179,14 +183,17 @@ def submit():
     # if there is data from a fail submit, prefill forms
     if 'submit_data' in session and session['submit_data']:
         data = session['submit_data']
-        form = LinkForm(titel=data[0], url=data[1], text=data[2])
+        form = LinkForm(titel=data[0], url=data[1], text=data[2], user=data[3], user_website=data[4])
     else:
         form = LinkForm()
     if form.validate_on_submit():
+        # if url or text was submitted
         if bool(form.url.data) ^ bool(form.text.data):
             link = Link(titel=form.titel.data,
                         url=form.url.data,
                         text=form.text.data,
+                        user=form.user.data,
+                        user_website=form.user_website.data,
                         created_at=datetime.datetime.utcnow(),
                         last_activity=datetime.datetime.utcnow(),
                         upvotes=0)
@@ -203,11 +210,14 @@ def submit():
 
             return redirect('/submit')
 
+        # if url and text was submitted
         else:
             flash('Choose between URL or Text', 'danger')
             session['submit_data'] = [form.titel.data,
                                       form.url.data,
-                                      form.text.data]
+                                      form.text.data,
+                                      form.user.data,
+                                      form.user_website.data]
 
             return redirect('/submit')
 
@@ -242,8 +252,8 @@ def comments(link_id):
 
     if form.validate_on_submit():
         link = Link.objects(id=link_id).first()
-        comment = Comment(name=form.name.data,
-                          website=form.website.data,
+        comment = Comment(user=form.user.data,
+                          user_website=form.user_website.data,
                           message=form.message.data,
                           created_at=datetime.datetime.utcnow(),
                           upvotes=0)

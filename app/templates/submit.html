@@ -23,15 +23,20 @@
 	{% endwith %}
 	<form class="form" role="form" action="" method="POST" enctype="login">
 		{{ form.hidden_tag() }}
+		<h2>Link</h2>
 		{{ wtf.form_field(form.titel) }}
 		{{ wtf.form_field(form.url) }}
 		{{ wtf.form_field(form.text) }}
+		<h2>User</h2>
+		{{ wtf.form_field(form.user) }}
+		{{ wtf.form_field(form.user_website) }}
 		{% for error in form.recaptcha.errors %}
 		 	{{ error }}
 		{% endfor %}
 		{{ form.recaptcha }}
 		<br />
-		<p><button type="submit" class="btn btn-default" value="name">Submit</button></p>
+		<p><button type="submit" class="btn btn-primary" value="name">Submit</button></p>
+	</form>
 </div>
 {% include "footer.html" %}
 {% endblock %}
