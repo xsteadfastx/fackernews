@@ -181,12 +181,27 @@ def new_atom():
 @app.route('/submit', methods=('GET', 'POST'))
 def submit():
     ''' adding new link '''
+    # if user and or website in session prefill form
+    if 'user' in session:
+        if 'user_website' in session:
+            form = LinkForm(
+                user=session['user'], user_website=session['user_website'])
+        else:
+            form = LinkForm(user=session['user'])
+
     # if there is data from a fail submit, prefill forms
     if 'submit_data' in session and session['submit_data']:
         data = session['submit_data']
-        form = LinkForm(titel=data[0], url=data[1], text=data[2], user=data[3], user_website=data[4])
-    else:
+        form = LinkForm(titel=data[0],
+                        url=data[1],
+                        text=data[2],
+                        user=data[3],
+                        user_website=data[4])
+
+    # if there is no form yet
+    if 'form' not in locals():
         form = LinkForm()
+
     if form.validate_on_submit():
         # if url or text was submitted
         if bool(form.url.data) ^ bool(form.text.data):
@@ -205,6 +220,11 @@ def submit():
                 session['voted_links'].append(str(link.id))
             else:
                 session['voted_links'] = []
+
+            # save username and or user website in session
+            session['user'] = form.user.data
+            if form.user_website.data:
+                session['user_website'] = form.user_website.data
 
             flash('Added link', 'success')
             session['submit_data'] = []
@@ -243,7 +263,17 @@ def upvote(link_id):
 
 @app.route('/comments/<link_id>', methods=('GET', 'POST'))
 def comments(link_id):
-    form = CommentForm()
+    ''' comments '''
+    # if there is already user data in session
+    if 'user' in session:
+        if 'user_website' in session:
+            form = CommentForm(
+                user=session['user'], user_website=session['user_website'])
+        else:
+            form = CommentForm(user=session['user'])
+    else:
+        form = CommentForm()
+
     link = Link.objects(id=link_id).first()
     if link.url:
         link_hostname = urlparse(link.url).hostname
@@ -267,6 +297,11 @@ def comments(link_id):
             session['voted_comments'].append(str(comment.id))
         else:
             session['voted_comments'] = []
+
+        # save username and or user website in session
+        session['user'] = form.user.data
+        if form.user_website.data:
+            session['user_website'] = form.user_website.data
 
         flash('Added comment', 'success')
 
