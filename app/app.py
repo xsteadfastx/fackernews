@@ -70,7 +70,8 @@ class LinkForm(Form):
     url = TextField('URL', validators=[URL(), Optional(), Length(max=255)])
     text = TextAreaField('Text')
     user = TextField('Name', validators=[Required(), Length(max=255)])
-    user_website = TextField('Website', validators=[URL(), Optional(), Length(max=255)])
+    user_website = TextField(
+        'Website', validators=[URL(), Optional(), Length(max=255)])
     recaptcha = RecaptchaField()
 
 
@@ -158,7 +159,7 @@ def new():
 @app.route('/new.atom')
 def new_atom():
     ''' feed for the new links '''
-    feed = AtomFeed('Recent Links',
+    feed = AtomFeed(SITENAME + ' - ' + 'Recent Links',
                     feed_url=request.url, url=request.url_root)
 
     hours_ago = datetime.datetime.utcnow(
