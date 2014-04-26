@@ -40,7 +40,7 @@ class Link(db.Document):
     titel = db.StringField(max_length=255, required=True)
     url = db.StringField(max_length=255)
     text = db.StringField()
-    user = db.StringField(max_length=255, required=True)
+    user = db.StringField(max_length=255)
     user_website = db.StringField(max_length=255)
     created_at = db.DateTimeField(
         default=datetime.datetime.utcnow(), required=True)
