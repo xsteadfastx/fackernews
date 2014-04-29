@@ -334,5 +334,28 @@ def comment_upvote(link_id, comment_id):
     return redirect('/comments/' + str(link_id))
 
 
+@app.route('/comments.atom')
+def comments_atom():
+    ''' feed for latest comments '''
+    feed = AtomFeed(SITENAME + ' - ' + 'Comments',
+                    feed_url=request.url, url=request.url_root)
+
+    hours_ago = datetime.datetime.utcnow(
+        ) - datetime.timedelta(hours=HOURS_TO_LIVE_NEW)
+
+    links = Link.objects(
+        last_activity__gt=hours_ago).order_by('-created_at')[:30]
+
+    for link in links:
+        for comment in link.comments:
+            feed.add(comment.message,
+                     content_type='html',
+                     author=comment.user,
+                     url=make_external('comments/%s' % str(link.id)),
+                     updated=link.created_at)
+
+    return feed.get_response()
+
+
 if __name__ == '__main__':
     app.run(debug=True)
