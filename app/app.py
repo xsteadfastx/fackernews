@@ -351,7 +351,7 @@ def comments_atom():
             feed.add(comment.message,
                      content_type='html',
                      author=comment.user,
-                     url=make_external('comments/%s' % str(link.id)),
+                     url=make_external('comments/%s#%s' % (str(link.id), comment.id)),
                      updated=link.created_at)
 
     return feed.get_response()

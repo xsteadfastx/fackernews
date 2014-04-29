@@ -40,15 +40,15 @@
 			<td>
 				{% if comment.user_website %}
 					{% if comment.id|string() in session.voted_comments %}
-					<small><i class="fa fa-chevron-up"></i> <a href="{{ comment.user_website }}">{{ comment.user }}</a> | {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+					<small><a name="{{ comment.id }}"></a><i class="fa fa-chevron-up"></i> <a href="{{ comment.user_website }}">{{ comment.user }}</a> | {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }} | <a href="#{{ comment.id }}">&#35;</a></small>
 					{% else %}
-					<small><a href="/comments/{{ link.id }}/upvote/{{ comment.id }}"><i class="fa fa-chevron-up"></i></a> <a href="{{ comment.user_website }}">{{ comment.user }}</a> | {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+					<small><a name="{{ comment.id }}"></a><a href="/comments/{{ link.id }}/upvote/{{ comment.id }}"><i class="fa fa-chevron-up"></i></a> <a href="{{ comment.user_website }}">{{ comment.user }}</a> | {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }} | <a href="#{{ comment.id }}">&#35;</a></small>
 					{% endif %}
 				{% else %}
 					{% if comment.id|string() in session.voted_comments %}
-					<small><i class="fa fa-chevron-up"></i> {{ comment.user }} | {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+					<small><a name="{{ comment.id }}"></a><i class="fa fa-chevron-up"></i> {{ comment.user }} | {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }} | <a href="#{{ comment.id }}">&#35;</a></small>
 					{% else %}
-					<small><a href="/comments/{{ link.id }}/upvote/{{ comment.id }}"><i class="fa fa-chevron-up"></i></a> {{ comment.user }} | {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+					<small><a name="{{ comment.id }}"></a><a href="/comments/{{ link.id }}/upvote/{{ comment.id }}"><i class="fa fa-chevron-up"></i></a> {{ comment.user }} | {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }} | <a href="#{{ comment.id }}">&#35;</a></small>
 					{% endif %}
 				{% endif %}
 				<br />
